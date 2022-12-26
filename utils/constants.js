@@ -1,0 +1,10 @@
+module.exports.pageNotFound = 'Страница не найдена';
+module.exports.authorizationNeed = 'Необходима авторизация';
+module.exports.userNotFound = 'Пользователь не найден';
+module.exports.invalidId = 'Введен некорректный Id';
+module.exports.invalidData = 'Введены некорректные данные';
+module.exports.alreadyExists = 'Пользователь уже существует';
+module.exports.alreadyExistsEmail = 'Пользователь с таким Email уже существует';
+module.exports.invalidCridentials = 'Неправильная почта или пароль';
+module.exports.movieNotFound = 'Фильм не найден';
+module.exports.permission = 'Вы можете удалить только свой фильм';

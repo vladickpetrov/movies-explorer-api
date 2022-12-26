@@ -1,37 +1,48 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const { NODE_ENV, JWT_SECRET } = require('dotenv').config();
-const User = require('../models/user');
 
-const IncorrectError = require('../errors/incorrect_error');
+const User = require('../models/user');
 const NotFoundError = require('../errors/not_found_error');
 const AlredyExistsError = require('../errors/already_exists_error');
+const RequestError = require('../errors/request_error');
+const {
+  userNotFound, invalidId, invalidData, alreadyExists, invalidCridentials, alreadyExistsEmail,
+} = require('../utils/constants');
+
+const { NODE_ENV, SECRET_KEY } = process.env;
 
 module.exports.getUserInfo = (req, res, next) => {
   User.findById(req.user._id)
     .then((user) => {
-      if (user == null) throw new NotFoundError('Пользователь не найден');
+      if (user == null) next(new NotFoundError(userNotFound));
       return res.send(user);
     })
     .catch((err) => {
-      if (err.name === 'CastError') throw new IncorrectError('Введен некорректные Id');
-      next(err);
+      if (err.name === 'CastError') next(new RequestError(invalidId));
+      return next(err);
     });
 };
 
 module.exports.updateUserInfo = (req, res, next) => {
   const { name, email } = req.body;
 
-  User.findByIdAndUpdate(req.user._id, { name, email }, {
-    new: true,
-    runValidators: true,
-  })
-    .then((user) => res.send(user))
-    .catch((err) => {
-      if (err.name === 'CastError') throw new IncorrectError('Введен некорректные Id');
-      if (err.name === 'ValidationError') throw new IncorrectError('Введены некорректные данные');
-      next(err);
-    });
+  User.findById(req.user._id)
+    .then((user) => {
+      if (user.email === email) next(new AlredyExistsError(alreadyExistsEmail));
+    })
+    .then(() => {
+      User.findByIdAndUpdate(req.user._id, { name, email }, {
+        new: true,
+        runValidators: true,
+      })
+        .then((user) => res.send(user))
+        .catch((err) => {
+          if (err.name === 'CastError') next(new RequestError(invalidId));
+          if (err.name === 'ValidationError') next(new RequestError(invalidData));
+          return next(err);
+        });
+    })
+    .catch((err) => next(err));
 };
 
 module.exports.createUser = (req, res, next) => {
@@ -54,8 +65,8 @@ module.exports.createUser = (req, res, next) => {
           res.send(newUser);
         })
         .catch((err) => {
-          if (err.name === 'ValidationError') next(new IncorrectError('Введены некорректные данные'));
-          if (err.code === 11000) next(new AlredyExistsError('Пользователь уже существует'));
+          if (err.name === 'ValidationError') next(new RequestError(invalidData));
+          if (err.code === 11000) next(new AlredyExistsError(alreadyExists));
         });
     })
     .catch((err) => next(err));
@@ -66,17 +77,18 @@ module.exports.login = (req, res, next) => {
 
   User.findOne({ email }).select('+password')
     .then((user) => {
-      if (!user) next(new IncorrectError('Неправильная почта или пароль'));
+      if (!user) next(new RequestError(invalidCridentials));
       return bcrypt.compare(password, user.password)
         .then((match) => {
-          if (!match) next(new IncorrectError('Неправильная почта или пароль'));
+          if (!match) next(new RequestError(invalidCridentials));
           return user;
         });
     })
     .then((user) => {
+      console.log(process.env);
       const token = jwt.sign(
         { _id: user._id },
-        NODE_ENV === 'production' ? JWT_SECRET : 'e5fbda01a7238de9952c8df1afe7153f89d10ae6f0cd4f5202819b2b0b185575',
+        NODE_ENV === 'production' ? SECRET_KEY : 'e5fbda01a7238de9952c8df1afe7153f89d10ae6f0cd4f5202819b2b0b185575',
         { expiresIn: '7d' },
       );
       res.send({ token });

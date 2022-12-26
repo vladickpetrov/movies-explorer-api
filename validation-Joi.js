@@ -2,7 +2,7 @@ const { Joi } = require('celebrate');
 
 module.exports.movieParams = {
   params: Joi.object().keys({
-    movieId: Joi.string().hex().length(24),
+    movieId: Joi.string().hex().length(24).required(),
   }),
 };
 
@@ -31,7 +31,7 @@ module.exports.signIn = {
 
 module.exports.signUp = {
   body: Joi.object().keys({
-    name: Joi.string().min(2).max(30),
+    name: Joi.string().required().min(2).max(30),
     email: Joi.string().required().email(),
     password: Joi.string().required(),
   }),
@@ -39,7 +39,7 @@ module.exports.signUp = {
 
 module.exports.userInfo = {
   body: Joi.object().keys({
-    name: Joi.string().min(2).max(30),
-    email: Joi.string().email(),
+    name: Joi.string().min(2).max(30).required(),
+    email: Joi.string().email().required(),
   }),
 };

@@ -1,49 +1,28 @@
-const IncorrectError = require('../errors/incorrect_error');
 const NotFoundError = require('../errors/not_found_error');
 const PermissionError = require('../errors/permission_error');
+const RequestError = require('../errors/request_error');
 const Movie = require('../models/movie');
+const {
+  invalidData, invalidId, movieNotFound, permission,
+} = require('../utils/constants');
 
 module.exports.createMovie = (req, res, next) => {
-  const {
-    country,
-    director,
-    duration,
-    year,
-    description,
-    image,
-    trailer,
-    thumbnail,
-    movieId,
-    nameRU,
-    nameEN,
-  } = req.body;
-
   Movie.create({
-    country,
-    director,
-    duration,
-    year,
-    description,
-    image,
-    trailer,
-    thumbnail,
-    movieId,
-    nameRU,
-    nameEN,
+    ...req.body,
     owner: req.user._id,
   })
     .then((movie) => res.send(movie))
     .catch((err) => {
-      if (err.name === 'ValidationError') throw new IncorrectError('Введены некорректные данные');
-      next(err);
+      if (err.name === 'ValidationError') next(new RequestError(invalidData));
+      return next(err);
     });
 };
 
 module.exports.deleteMovie = (req, res, next) => {
   Movie.findById(req.params.movieId)
     .then((movie) => {
-      if (movie == null) throw new NotFoundError('Фильм не найден');
-      if (movie.owner.toString() !== req.user._id) throw new PermissionError('Вы можете удалить только свой фильм');
+      if (movie == null) throw new NotFoundError(movieNotFound);
+      if (movie.owner.toString() !== req.user._id) next(new PermissionError(permission));
     })
     .then(() => {
       Movie.findByIdAndDelete(req.params.movieId)
@@ -51,23 +30,16 @@ module.exports.deleteMovie = (req, res, next) => {
           res.send(movie);
         })
         .catch((err) => {
-          if (err.name === 'CastError') throw new IncorrectError('Введен некорректные movieId');
+          if (err.name === 'CastError') next(new RequestError(invalidId));
           next(err);
         });
     })
-    .catch((err) => {
-      next(err);
-    });
+    .catch((err) => next(err));
 };
 
 module.exports.getUserMovies = (req, res, next) => {
   Movie.find({ owner: req.user._id })
     .populate('owner')
-    .then((movie) => {
-      if (movie == null) throw new NotFoundError('Фильмы не найдены');
-      return res.send(movie);
-    })
-    .catch((err) => {
-      next(err);
-    });
+    .then((movie) => res.send(movie))
+    .catch((err) => next(err));
 };
