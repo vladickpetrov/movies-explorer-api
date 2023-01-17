@@ -85,7 +85,6 @@ module.exports.login = (req, res, next) => {
         });
     })
     .then((user) => {
-      console.log(process.env);
       const token = jwt.sign(
         { _id: user._id },
         NODE_ENV === 'production' ? SECRET_KEY : 'e5fbda01a7238de9952c8df1afe7153f89d10ae6f0cd4f5202819b2b0b185575',
