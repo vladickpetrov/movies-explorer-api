@@ -18,7 +18,7 @@ const limiter = rateLimit(limitSettings);
 
 const options = {
   origin: [
-    'http://localhost:3001',
+    'http://localhost:3000',
     'https://videovlad.nomoredomains.club',
     'http://videovlad.nomoredomains.club',
   ],
