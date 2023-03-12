@@ -20,6 +20,7 @@ const options = {
   origin: [
     'https://videovlad.nomoredomains.club',
     'http://videovlad.nomoredomains.club',
+    'http://localhost:3000',
   ],
   methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE'],
   preflightContinue: false,
