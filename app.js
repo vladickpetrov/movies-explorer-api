@@ -8,7 +8,7 @@ const rateLimit = require('express-rate-limit');
 
 const app = express();
 
-const { PORT = 3000, NODE_ENV, DB_LINK } = process.env;
+const { PORT = 3001, NODE_ENV, DB_LINK } = process.env;
 const { centralErrorHandling } = require('./central_error_handling');
 const { requestLogger, errorLogger } = require('./middlewares/logger');
 const { limitSettings } = require('./limiter');

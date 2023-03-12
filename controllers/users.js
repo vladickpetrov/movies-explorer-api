@@ -37,6 +37,7 @@ module.exports.updateUserInfo = (req, res, next) => {
       })
         .then((user) => res.send(user))
         .catch((err) => {
+          if (err.code === 11000) next(new AlredyExistsError(alreadyExists));
           if (err.name === 'CastError') next(new RequestError(invalidId));
           if (err.name === 'ValidationError') next(new RequestError(invalidData));
           return next(err);
